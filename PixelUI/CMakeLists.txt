@@ -9,7 +9,7 @@ file(GLOB_RECURSE PixelUISrc
 
 add_executable(PixelUI ${PixelUISrc})
 
-target_link_libraries(PixelUI PUBLIC glfw)
+target_link_libraries(PixelUI PUBLIC glfw bgfx)
 
 # target_include_directories(PixelUI PUBLIC
 # "../ThirdParty/glfw/include")

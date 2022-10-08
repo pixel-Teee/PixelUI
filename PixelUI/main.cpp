@@ -14,6 +14,42 @@
 
 #include <iostream>
 
+bgfx::ShaderHandle loadShader(const char* FILENAME)
+{
+	const char* shaderPath = "???";
+
+	switch (bgfx::getRendererType()) {
+	case bgfx::RendererType::Noop:
+	case bgfx::RendererType::Direct3D9:  shaderPath = "shaders/dx9/";   break;
+	case bgfx::RendererType::Direct3D11:
+	case bgfx::RendererType::Direct3D12: shaderPath = "shaders/dx11/";  break;
+	case bgfx::RendererType::Gnm:        shaderPath = "shaders/pssl/";  break;
+	case bgfx::RendererType::Metal:      shaderPath = "shaders/metal/"; break;
+	case bgfx::RendererType::OpenGL:     shaderPath = "shaders/glsl/";  break;
+	case bgfx::RendererType::OpenGLES:   shaderPath = "shaders/essl/";  break;
+	case bgfx::RendererType::Vulkan:     shaderPath = "shaders/spirv/"; break;
+	}
+
+	size_t shaderLen = strlen(shaderPath);
+	size_t fileLen = strlen(FILENAME);
+	char* filePath = (char*)malloc(shaderLen + fileLen + 1);
+	memset(filePath, 0, sizeof(filePath));
+	memcpy(filePath, shaderPath, shaderLen);
+	memcpy(&filePath[shaderLen], FILENAME, fileLen);
+
+	FILE* file = fopen(filePath, "rb");
+	fseek(file, 0, SEEK_END);
+	long fileSize = ftell(file);
+	fseek(file, 0, SEEK_SET);
+
+	const bgfx::Memory* mem = bgfx::alloc(fileSize + 1);
+	fread(mem->data, 1, fileSize, file);
+	mem->data[mem->size - 1] = '\0';
+	fclose(file);
+
+	return bgfx::createShader(mem);
+}
+
 int main()
 {
 	//glfw init
@@ -68,7 +104,7 @@ int main()
 	bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x303030ff, 1.0f, 0);
 	bgfx::setViewRect(0, 0, 0, WIDTH, HEIGHT);
 
-	bgfx::frame();
+	//bgfx::frame();
 
 	//glfwMakeContextCurrent(window2);
 	//create a frame buffer from hwnd
@@ -82,6 +118,22 @@ int main()
 
 	bgfx::setViewClear(1, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0xcc3030ff, 1.0f, 0);
 	bgfx::setViewRect(1, 0, 0, WIDTH, HEIGHT);
+
+	float pos[9] = { 0.0f, 0.0f, 0.0f,
+	1.0f, 0.0f, 0.0f,
+	0.0f, 1.0f, 0.0f };
+
+	uint16_t indices[3] = { 0, 1, 2 };
+
+	//------vertex layout------
+	bgfx::VertexLayout myDecl;
+	myDecl.begin()
+		.add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+		.end();
+	//------vertex layout------
+
+	bgfx::VertexBufferHandle vbh = bgfx::createVertexBuffer(bgfx::makeRef(pos, sizeof(pos)), myDecl);
+	bgfx::IndexBufferHandle ibh = bgfx::createIndexBuffer(bgfx::makeRef(indices, sizeof(indices)));
 
 	while (!glfwWindowShouldClose(window) && !glfwWindowShouldClose(window2))
 	{	
@@ -107,6 +159,7 @@ int main()
 		
 	}
 
+	bgfx::destroy(handle);
 	//shut down bgfx
 	bgfx::shutdown();
 

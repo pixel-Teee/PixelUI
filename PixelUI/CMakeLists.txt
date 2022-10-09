@@ -113,5 +113,7 @@ endforeach()
 # add_custom_target(MyTarget ALL
 # DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Runtime/vs_triangle.bin")
 
-
+if(MSVC)
+	set_property(TARGET PixelUI PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+endif()
 

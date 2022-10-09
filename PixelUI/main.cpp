@@ -16,24 +16,24 @@
 
 bgfx::ShaderHandle loadShader(const char* FILENAME)
 {
-	const char* shaderPath = "???";
+	const char* shaderPath = "Runtime/";
 
-	switch (bgfx::getRendererType()) {
-	case bgfx::RendererType::Noop:
-	case bgfx::RendererType::Direct3D9:  shaderPath = "shaders/dx9/";   break;
-	case bgfx::RendererType::Direct3D11:
-	case bgfx::RendererType::Direct3D12: shaderPath = "shaders/dx11/";  break;
-	case bgfx::RendererType::Gnm:        shaderPath = "shaders/pssl/";  break;
-	case bgfx::RendererType::Metal:      shaderPath = "shaders/metal/"; break;
-	case bgfx::RendererType::OpenGL:     shaderPath = "shaders/glsl/";  break;
-	case bgfx::RendererType::OpenGLES:   shaderPath = "shaders/essl/";  break;
-	case bgfx::RendererType::Vulkan:     shaderPath = "shaders/spirv/"; break;
-	}
+	//switch (bgfx::getRendererType()) {
+	//case bgfx::RendererType::Noop:
+	//case bgfx::RendererType::Direct3D9:  shaderPath = "shaders/dx9/";   break;
+	//case bgfx::RendererType::Direct3D11:
+	//case bgfx::RendererType::Direct3D12: shaderPath = "shaders/dx11/";  break;
+	//case bgfx::RendererType::Gnm:        shaderPath = "shaders/pssl/";  break;
+	//case bgfx::RendererType::Metal:      shaderPath = "shaders/metal/"; break;
+	//case bgfx::RendererType::OpenGL:     shaderPath = "shaders/glsl/";  break;
+	//case bgfx::RendererType::OpenGLES:   shaderPath = "shaders/essl/";  break;
+	//case bgfx::RendererType::Vulkan:     shaderPath = "shaders/spirv/"; break;
+	//}
 
 	size_t shaderLen = strlen(shaderPath);
 	size_t fileLen = strlen(FILENAME);
 	char* filePath = (char*)malloc(shaderLen + fileLen + 1);
-	memset(filePath, 0, sizeof(filePath));
+	memset(filePath, 0, shaderLen + fileLen + 1);
 	memcpy(filePath, shaderPath, shaderLen);
 	memcpy(&filePath[shaderLen], FILENAME, fileLen);
 
@@ -121,7 +121,7 @@ int main()
 
 	float pos[9] = { 0.0f, 0.0f, 0.0f,
 	1.0f, 0.0f, 0.0f,
-	0.0f, 1.0f, 0.0f };
+	0.0f, 1.0f, 0.0f};
 
 	uint16_t indices[3] = { 0, 1, 2 };
 
@@ -135,15 +135,37 @@ int main()
 	bgfx::VertexBufferHandle vbh = bgfx::createVertexBuffer(bgfx::makeRef(pos, sizeof(pos)), myDecl);
 	bgfx::IndexBufferHandle ibh = bgfx::createIndexBuffer(bgfx::makeRef(indices, sizeof(indices)));
 
+	bgfx::ShaderHandle vsh = loadShader("vs_triangle.bin");
+	bgfx::ShaderHandle fsh = loadShader("fs_triangle.bin");
+	bgfx::ProgramHandle program = bgfx::createProgram(vsh, fsh, true);
+
 	while (!glfwWindowShouldClose(window) && !glfwWindowShouldClose(window2))
 	{	
 		//glfwMakeContextCurrent(window);
 		bgfx::setViewFrameBuffer(0, BGFX_INVALID_HANDLE);
+
+		bgfx::setVertexBuffer(0, vbh);
+		bgfx::setIndexBuffer(ibh);
+
+		bgfx::submit(0, program);//submit to view 0
+
 		//render here
 		bgfx::touch(0);
+
+		//float view[16];
+		//bx::mtxLookAt(view, eye, at);
+		//float proj[16];
+		//bx::mtxProj(proj, 60.0f, float(WIDTH) / float(HEIGHT), 0.1f, 100.0f, bgfx::getCaps()->homogeneousDepth);
+		//bgfx::setViewTransform(0, view, proj);		
+
 		//glClear(GL_COLOR_BUFFER_BIT);
 
 		bgfx::setViewFrameBuffer(1, handle);//link view1 and framebuffer
+
+		bgfx::setVertexBuffer(0, vbh);
+		bgfx::setIndexBuffer(ibh);
+
+		bgfx::submit(1, program);//submit to view 0
 
 		bgfx::touch(1);//submit to view1
 
